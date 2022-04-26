@@ -6,25 +6,153 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      message = F,
+                      warning = F,
+                      comment = "",
+                      fig.width = 10,
+                      fig.asp = 0.618)
 ```
 
-## R Markdown
+```{r}
+library(tidyverse)
+library(readxl)
+library(ggtext)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+data_stunting_2019 <- read_excel("data_stunting.xlsx",
+                                 sheet = "Tahun2019")
+data_stunting_2019
+data_stunting_2020 <- read_excel("data_stunting.xlsx",
+                                 sheet = "Tahun2020")
+data_stunting_2020
+data_stunting_2021 <- read_excel("data_stunting.xlsx",
+                                 sheet = "Tahun2021")
+data_stunting_2021
+data_stunting_2022 <- read_excel("data_stunting.xlsx",
+                                 sheet = "Tahun2022")
+data_stunting_2022
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+dim(data_stunting_2019)
+dim(data_stunting_2020)
+dim(data_stunting_2021)
+dim(data_stunting_2022)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+library(sf)
+peta <- read_sf("Data Administrasi/Administrasi_Provinsi.shp")
+peta
+
+peta_2020 <-  peta %>%
+  left_join(data_stunting_2020,
+            by = c("PROVINSI"="Provinsi"))
+peta_2020
+
+peta_2021 <- peta %>%
+  left_join(data_stunting_2021,
+            by = c("PROVINSI"="Provinsi"))
+peta_2021
+```
+
+# Visualisasi Peta
+
+```{r}
+ggthemr::ggthemr("fresh")
+
+plot_2020 <- ggplot(data = peta_2020,
+       aes(geometry = geometry,
+           fill = Prevalensi))+
+  geom_sf(alpha = 0.8)+
+  geom_sf_label(
+    data = peta_2020 %>%
+      filter(
+        Prevalensi > quantile(Prevalensi, 0.9)) %>%
+      mutate(
+        PROVINSI = str_to_title(PROVINSI)),
+    aes(label = PROVINSI),
+    alpha = 0.4,
+    nudge_y = 0.8)+
+  labs(
+    title = "Beberapa provinsi masih mengalami masalah stunting yang relatif tinggi",
+    subtitle = "Tahun 2020",
+    fill = "Prevalensi Stunting (%)",
+    x = "Longitude",
+    y = "Latitude",
+    caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+  coord_sf()+
+  ggsci::scale_fill_gsea(limits = c(0, 30))+
+  theme(
+    plot.title = element_markdown(size = 16),
+    plot.subtitle = element_markdown(),
+    legend.title = element_markdown(),
+    legend.position = "top",
+    plot.caption = element_markdown())
+plot_2020
+
+# ggsave("plot_2020.png",
+#        plot = plot_2020,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+```{r}
+plot_2021 <- ggplot(data = peta_2021,
+       aes(geometry = geometry,
+           fill = Prevalensi))+
+  geom_sf(alpha = 0.8)+
+  geom_sf_label(
+    data = peta_2021 %>%
+      filter(
+        Prevalensi > quantile(Prevalensi, 0.85),
+        !(PROVINSI %in% c("NUSA TENGGARA TIMUR",
+                          "NUSA TENGGARA BARAT"))) %>%
+      mutate(
+        PROVINSI = str_to_title(PROVINSI)),
+    aes(label = PROVINSI),
+    alpha = 0.4,
+    nudge_y = 0.8)+
+  geom_sf_label(
+    data = peta_2021 %>%
+      filter(
+        PROVINSI == "NUSA TENGGARA TIMUR") %>%
+      mutate(
+        PROVINSI = str_to_title(PROVINSI)),
+    aes(label = PROVINSI),
+    alpha = 0.4,
+    nudge_y = 0.8)+
+  geom_sf_label(
+    data = peta_2021 %>%
+      filter(
+        PROVINSI == "NUSA TENGGARA BARAT") %>%
+      mutate(
+        PROVINSI = str_to_title(PROVINSI)),
+    aes(label = PROVINSI),
+    alpha = 0.4,
+    nudge_y = -0.8)+
+  labs(
+    title = "Beberapa Provinsi Sudah Menangani Masalah Stunting dengan Cukup Baik",
+    subtitle = "Tahun 2021",
+    fill = "Prevalensi Stunting (%)",
+    x = "Longitude",
+    y = "Latitude",
+    caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+  coord_sf()+
+  ggsci::scale_fill_gsea(limits = c(0, 30))+
+  theme(
+    plot.title = element_markdown(size = 16),
+    plot.subtitle = element_markdown(),
+    legend.title = element_markdown(),
+    legend.position = "top",
+    plot.caption = element_markdown()
+  )
+
+# ggsave("plot_2021.png",
+#        plot = plot_2021,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
