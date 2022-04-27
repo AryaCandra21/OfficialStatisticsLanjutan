@@ -398,3 +398,108 @@ plot_diff
 #        height = unit(10, "inch"))
 ```
 
+# Pie Chart
+
+```{r}
+data_balita <- read_excel("BBLR_Gizi.xlsx",
+                          sheet = "BayiLahir") %>%
+  pivot_longer(
+    cols = `2018`:`2021`,
+    names_to = "Tahun",
+    values_to = "BayiLahir"
+  )
+
+data_balita
+
+data_bblr <- read_excel("BBLR_Gizi.xlsx",
+                        sheet = "BBLR")%>%
+  pivot_longer(
+    cols = `2018`:`2021`,
+    names_to = "Tahun",
+    values_to = "BBLR"
+  )
+
+data_bblr
+
+data_bblr <- data_balita %>%
+  left_join(data_bblr)
+
+bblr_2021 <- data_bblr %>%
+  filter(
+    Tahun == 2021
+  )
+```
+
+```{r}
+bblr_2021 <- bblr_2021 %>%
+  filter(
+    `Kabupaten/Kota` != "DKI Jakarta") %>%
+  mutate(
+    CumuBayiLahir = cumsum(BayiLahir),
+    noBBLR = BayiLahir - BBLR,
+    lagCumuBayiLahir = lag(CumuBayiLahir)) %>%
+  replace_na(replace = list(lagCumuBayiLahir = 0)) %>%
+  rename(
+    KabKot=`Kabupaten/Kota`
+  )
+
+bblr_2021
+```
+
+```{r}
+# bblr_2021 %>%
+#   select(KabKot, noBBLR, BBLR) %>%
+#   pivot_longer(
+#     cols = noBBLR:BBLR,
+#     names_to = "Kondisi",
+#     values_to = "n") %>%
+#   ggplot() +
+#     geom_bar(
+#       aes(x = KabKot,
+#           y = n,
+#           fill = Kondisi),
+#       stat = "identity"
+#     )
+
+plot_bblr <- bblr_2021 %>%
+  mutate(
+    per_bblr = BBLR/BayiLahir*100,
+    KabKot = factor(KabKot),
+    KabKot = fct_reorder(KabKot, per_bblr) %>%
+      fct_rev()) %>%
+  ggplot(aes(
+        x = KabKot,
+        y = per_bblr))+
+    geom_bar(
+      aes(fill = KabKot),
+      stat = "identity",
+      color = "black",
+      alpha = 0.8)+
+    geom_label(
+      aes(label = str_glue("{round(per_bblr, 2)}%")),
+      size = 5,
+      fill = "lavender")+
+    labs(
+      title = "Kabupaten/Kota di Provinsi DKI seluruhnya memiliki persentase BBLR kurang dari 10%",
+      subtitle = "Kabupaten Kepulauan Seribu memiliki persentase BBLR tertinggi",
+      fill = "Kabupaten/Kota")+
+    ggsci::scale_fill_startrek()+
+    theme(
+      legend.position = "top",
+      axis.line = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.y = element_blank(),
+      axis.text.x = element_markdown(size = 14),
+      legend.margin = margin(t = 10),
+      panel.grid = element_blank())
+
+# ggsave("plot_bblr.png",
+#        plot_bblr,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+
+
