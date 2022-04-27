@@ -56,6 +56,187 @@ peta_2021 <- peta %>%
 peta_2021
 ```
 
+# Visualisasi Dot Plot
+
+
+```{r}
+ggthemr::ggthemr("fresh")
+
+nasional_2020 <- data_stunting_2020 %>%
+  summarise(
+    Prevalensi = (sum(sPendek)+sum(sSangatPendek))*100/sum(JumlahBalita)
+  )
+
+nasional_2020 <- data.frame(
+  Provinsi = "Indonesia",
+  Prevalensi = nasional_2020$Prevalensi
+)
+
+nasional_2020
+
+bind_rows(data_stunting_2020, nasional_2020)
+
+dot_plot_2020 <- data_stunting_2020 %>%
+  bind_rows(nasional_2020) %>%
+  mutate(
+    Provinsi = case_when(
+      Provinsi == "DKI JAKARTA" ~ "DKI Jakarta",
+      TRUE ~ str_to_title(Provinsi)),
+    Provinsi = fct_reorder(Provinsi, Prevalensi),
+    Kondisi = case_when(
+      Prevalensi > nasional_2020$Prevalensi ~ "Buruk",
+      Prevalensi <= nasional_2020$Prevalensi ~ "Baik"),
+    Kondisi = as.factor(Kondisi)) %>%
+  ggplot(aes(x = Prevalensi,
+             y = Provinsi,
+             color = Kondisi))+
+  geom_point(size = 2.5)+
+  labs(
+    title = "Masih Terdapat banyak Provinsi yang Memiliki Prevalensi Stunting Lebih dari Nasional",
+    subtitle = "Tahun 2020",
+    x = "Prevalensi (%)",
+    caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+  scale_color_manual(values = c("green", "red"))+
+  theme(
+    plot.title = element_markdown(hjust = 0),
+    axis.title.y = element_blank(),
+    axis.text.y =  element_markdown(color = c(rep("grey30", 16),
+                                              "blue",
+                                              rep("grey30", 18)),
+                                    size = 12),
+    legend.position = "top",
+    plot.caption = element_markdown())
+dot_plot_2020
+
+# ggsave("dot_plot_2020.png",
+#        plot = dot_plot_2020,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+```{r}
+ggthemr::ggthemr("fresh")
+
+nasional_2021 <- data_stunting_2021 %>%
+  summarise(
+    Prevalensi = (sum(sPendek)+sum(sSangatPendek))*100/sum(JumlahBalita)
+  )
+
+nasional_2021 <- data.frame(
+  Provinsi = "Indonesia",
+  Prevalensi = nasional_2021$Prevalensi
+)
+
+nasional_2021
+
+bind_rows(data_stunting_2021, nasional_2021)
+
+dot_plot_2021 <- data_stunting_2021 %>%
+  bind_rows(nasional_2021) %>%
+  mutate(
+    Provinsi = case_when(
+      Provinsi == "DKI JAKARTA" ~ "DKI Jakarta",
+      TRUE ~ str_to_title(Provinsi)),
+    Provinsi = fct_reorder(Provinsi, Prevalensi),
+    Kondisi = case_when(
+      Prevalensi > nasional_2021$Prevalensi ~ "Buruk",
+      Prevalensi <= nasional_2021$Prevalensi ~ "Baik"),
+    Kondisi = as.factor(Kondisi)) %>%
+  ggplot(aes(x = Prevalensi,
+             y = Provinsi,
+             color = Kondisi))+
+  geom_point(size = 2.5)+
+  labs(
+    title = "*Secara Umum*, Provinsi di Indonesia Sudah Mengurangi Prevalensi Stunting",
+    subtitle = "Tahun 2021",
+    x = "Prevalensi (%)",
+    caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+  scale_color_manual(values = c("green", "red"))+
+  scale_x_continuous(limits = c(0, 30))+
+  theme(
+    plot.title = element_markdown(hjust = 0),
+    axis.title.y = element_blank(),
+    axis.text.y =  element_markdown(color = c(rep("grey30", 16),
+                                              "blue",
+                                              rep("grey30", 18)),
+                                    size = 12),
+    legend.position = "top",
+    plot.caption = element_markdown())
+
+dot_plot_2021
+
+# ggsave("dot_plot_2021.png",
+#        plot = dot_plot_2021,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+# Histogram
+
+```{r}
+hist_2020 <- ggplot(data = data_stunting_2020,
+       aes(Prevalensi))+
+  geom_density(
+    aes(y = ..count..),
+    size = 2,
+    color = "slateblue")+
+  labs(
+    title = "Distribusi Prevalensi *Stunting* di Indonesia Berbentuk **Menceng Kanan**  
+    Terdapat Daerah dengan Prevalensi Stunting Relatif Tinggi",
+    subtitle = "Tahun 2020",
+    x = "Prevalensi (%)",
+    caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+  scale_y_continuous(limits =  c(0, 3),
+                     breaks = seq(0, 3, 1))+
+  scale_x_continuous(breaks = seq(0, 30, 5))+
+  theme(
+    plot.title = element_markdown(),
+    plot.caption = element_markdown()
+  )
+
+hist_2020
+
+# ggsave("hist_2020.png",
+#        plot = hist_2020,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+```{r}
+hist_2021 <- ggplot(data = data_stunting_2021,
+       aes(Prevalensi))+
+  geom_density(
+    aes(y = ..count..),
+    size = 2,
+    color = "slateblue")+
+  labs(
+    title = "Provinsi dengan Prevalensi Stunting Tinggi Cukup Dapat Diatasi",
+    subtitle = "Tahun 2021",
+    x = "Prevalensi (%)",
+    caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+  scale_y_continuous(limits =  c(0, 3),
+                     breaks = seq(0, 3, 1))+
+  scale_x_continuous(limits = c(0, 30),
+                     breaks = seq(0, 30, 5))+
+  theme(
+    plot.title = element_markdown(),
+    plot.caption =element_markdown()
+  )
+
+hist_2021
+
+# ggsave("hist_2021.png",
+#        plot = hist_2021,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+
+
 # Visualisasi Peta
 
 ```{r}
@@ -71,11 +252,11 @@ plot_2020 <- ggplot(data = peta_2020,
         Prevalensi > quantile(Prevalensi, 0.9)) %>%
       mutate(
         PROVINSI = str_to_title(PROVINSI)),
-    aes(label = PROVINSI),
-    alpha = 0.4,
+    aes(label = str_glue("{PROVINSI}\n{Prevalensi}%")),
+    alpha = 0.35,
     nudge_y = 0.8)+
   labs(
-    title = "Beberapa provinsi masih mengalami masalah stunting yang relatif tinggi",
+    title = "Provinsi yang Mengalami Stunting Tinggi Relatif Mengumpul di Suatu Wilayah",
     subtitle = "Tahun 2020",
     fill = "Prevalensi Stunting (%)",
     x = "Longitude",
@@ -111,8 +292,8 @@ plot_2021 <- ggplot(data = peta_2021,
                           "NUSA TENGGARA BARAT"))) %>%
       mutate(
         PROVINSI = str_to_title(PROVINSI)),
-    aes(label = PROVINSI),
-    alpha = 0.4,
+    aes(label = str_glue("{PROVINSI}\n{Prevalensi}%")),
+    alpha = 0.35,
     nudge_y = 0.8)+
   geom_sf_label(
     data = peta_2021 %>%
@@ -120,8 +301,8 @@ plot_2021 <- ggplot(data = peta_2021,
         PROVINSI == "NUSA TENGGARA TIMUR") %>%
       mutate(
         PROVINSI = str_to_title(PROVINSI)),
-    aes(label = PROVINSI),
-    alpha = 0.4,
+    aes(label = str_glue("{PROVINSI}\n{Prevalensi}%")),
+    alpha = 0.35,
     nudge_y = 0.8)+
   geom_sf_label(
     data = peta_2021 %>%
@@ -129,8 +310,8 @@ plot_2021 <- ggplot(data = peta_2021,
         PROVINSI == "NUSA TENGGARA BARAT") %>%
       mutate(
         PROVINSI = str_to_title(PROVINSI)),
-    aes(label = PROVINSI),
-    alpha = 0.4,
+    aes(label = str_glue("{PROVINSI}\n{Prevalensi}%")),
+    alpha = 0.35,
     nudge_y = -0.8)+
   labs(
     title = "Beberapa Provinsi Sudah Menangani Masalah Stunting dengan Cukup Baik",
@@ -146,11 +327,72 @@ plot_2021 <- ggplot(data = peta_2021,
     plot.subtitle = element_markdown(),
     legend.title = element_markdown(),
     legend.position = "top",
-    plot.caption = element_markdown()
-  )
+    plot.caption = element_markdown())
+
+plot_2021
 
 # ggsave("plot_2021.png",
 #        plot = plot_2021,
+#        device = "png",
+#        width = unit(16, "inch"),
+#        height = unit(10, "inch"))
+```
+
+# Waterfall Chart
+
+```{r}
+diff_prevalensi <- data_stunting_2021$Prevalensi-data_stunting_2020$Prevalensi
+diff_prevalensi
+
+diff_stunting <- data.frame(
+  Provinsi = data_stunting_2020$Provinsi,
+  Prevalensi_diff = diff_prevalensi,
+  Prevalensi2020 = data_stunting_2020$Prevalensi,
+  Prevalensi2021 = data_stunting_2021$Prevalensi) %>%
+  as_tibble() %>%
+  mutate(
+    Better = case_when(
+      Prevalensi_diff <= 0 ~ "Better",
+      Prevalensi_diff > 0 ~ "Worse")) %>%
+  arrange(
+    diff_prevalensi)
+diff_stunting$id <- 34:1
+diff_stunting
+
+plot_diff <- diff_stunting %>%
+  mutate(
+    Provinsi = case_when(
+      Provinsi == "DKI JAKARTA" ~ "DKI Jakarta",
+      TRUE ~ str_to_title(Provinsi)),
+    Provinsi = fct_reorder(Provinsi, id)) %>%
+  ggplot()+
+    geom_rect(
+      aes(
+        y = Provinsi,
+        ymin = id-0.5,
+        ymax = id+0.5,
+        xmin = Prevalensi2020,
+        xmax = Prevalensi2021,
+        fill =  Better),
+      color = "black") +
+    labs(
+      title = "Beberapa Provinsi Menunjukkan Perkembangan yang Baik dalam Menangani Masalah Stunting",
+      subtitle = "Data Tahun 2020-2021",
+      fill = "Progress",
+      x = "Prevalensi Stunting",
+      caption = "**Sumber Data : Aksi Bangda Kemendagri**")+
+    scale_fill_manual(values = c("green", "red"))+
+    scale_x_continuous(breaks = seq(0, 35, 5),
+                       limits = c(0, 30))+
+    theme(
+      axis.title.y = element_blank(),
+      plot.caption = element_markdown(),
+      legend.position = "top")
+plot_diff
+
+
+# ggsave("plot_diff.png",
+#        plot = plot_diff,
 #        device = "png",
 #        width = unit(16, "inch"),
 #        height = unit(10, "inch"))
